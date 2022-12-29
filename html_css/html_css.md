@@ -442,6 +442,96 @@ This can address mobiles as well. This is because we can use different amount of
 In a smaller screen, the column should take 6 units while in a big screen it should take only in 3.
 
 ## Avoid Redudance
+In some cases, we still have redudance in our html file. For instance, here in the color red:
+```
+<title>Hello!</title>
+    <style>
+        ul {
+            font-size: 14px;
+            color: red;
+        }
+        ol {
+            font-size: 18px;
+            color: red
+        }
+    </style>
+```
+To avoid redudance, we use Sass.
 
+# Sass
+The Sass allows us to create variables which can be used later. The sass file has a termination ".scss".
 
+```
+$color: red;
+ul {
+    font-size: 14px;
+    color: $color
+}
+ol {
+    font-size: 18px;
+    color: $color;
+}
+```
+
+The variables are defined with a $ before them.
+The web browsers do not understand Sass. Therefore, we must compile the sass file into a css file.
+We do that with the sass software (can be downloaded on the browser) and after we use it in the terminal:
+
+```
+sass {name_of_sass_file.scss}:{name_to_give_to_css_file.css}
+```
+After, in the link inside styles, we should use the css file steady of the scss file.
+
+```
+<link rel="stylesheet" href="{name_of_css_file}.css">
+```
+Everytime we change the scss file, we need to compile again.
+
+To automate the process, we do that:
+
+```
+sass --watch {name_of_sass_file.scss}:{name_to_give_to_css_file.css}
+```
+
+In that way sass, will monitor and change automatically the css file and we do not have to compile the sass file everytime we change it.
+
+## Sass Nesting
+We can use Sass inside Sass.
+For example, a paragraph should only be green if it is inside of a div in the Sass file.
+```
+div {
+    font-size: 18px;
+    
+    p {
+        color: blue;
+    }
+
+    ul {
+        color: green;
+    }
+}
+```
+
+This will give descendant in the css file when the css file is compiled.
+
+## Inheritage
+Sometimes, part of the class will have some attributes that are equal to all other classes. Because of that, it is useful for us to use inheritage inside the Sass file.
+
+We can use that with "%". For instance, everyone of the following is a message and the specific variables will have some more specific attributes:
+
+```
+%message {
+    font-family: sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    border: 1px solid black
+}
+
+.sucess {
+    @extend %message;
+    background-color: green;
+}
+```
+
+The css will recompile the css.
 
