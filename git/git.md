@@ -110,4 +110,27 @@ When we want to switch to a branch does not yet exist.
 Switched to a new branch '{new_branch}'
 ```
 
-add new line
+## git merge
+Use to merge two branchs. Git is smart to use the changes from both unless they conflict with each other.
+
+# Forking a Repository
+Forking a repository makes a copy of the original repository.
+
+The fork of the repository can be done in github page in the top-right side.
+
+By forking the repository, we make the repository "our own".
+
+After, we make the changes, we have to make a `pull request`.
+
+# GitHub Pages
+Provide a a way to take codes of HTML, CSS, Python and create a website for free.
+
+To do that, we create a repository with the following name:
+`{user_name}.github.io`
+
+After the repository is created it already support github pages.
+
+After we add code to the repository, we can go in settings and the webpage is ready to be published.
+
+Github will automatically update the website when there is a new push.
+
