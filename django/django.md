@@ -238,7 +238,7 @@ Now we have a non static file!
 Now we want to build static files. For instance, a CSS file is an static file.
 
 We create the static files inside the static folder which is inside the app. We do that for the same reason we add a folder with the app name in the templates folder.
-
+s
 After we create a `styles.css` as a static file, we add it in the html with the following format (steady of a url):
 ```
 {% load static %}
@@ -262,4 +262,132 @@ After we create a `styles.css` as a static file, we add it in the html with the 
 
 It is important to add `{% load static %}` in the beginning of the html.
 
+# Tasks
+Further use of the web applications provide the possibility to render one html if a condition is true and another one if the condition is false.
 
+Now we create a new app. After that, it is importan to:
+1. go to the project `settings.py` and add the new app to INSTALLED_APPS list.
+2. go to `urls.py` to include those urls to the urlpatterns list.
+3. go to the new app directory to create a urls.py and define a urlpattern. 
+
+After, to create a list of tasks, we define a global variable with it and use it inside the views:
+```
+tasks = ["foo", "bar", "baz"]
+
+# Create your views here.
+def index(request):
+    return render(request, "task/index.html",
+        {
+            "tasks": tasks
+        }
+    )
+```
+
+Later, to render the tasks we use a for loop inside the html:
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tasks</title>
+    </head>
+    <body>
+        <h1>Tasks:</h1>
+        <ul>
+            {% for task in tasks %}
+                <li>{{ task }}</li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>
+```
+
+# Forms
+Now we construct a html to add another task:
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tasks</title>
+    </head>
+    <body>
+        <h1>Add Task:</h1>
+        <form>
+            <input type="text" name="task">
+            <input type="submit">
+        </form>
+    </body>
+</html>
+```
+
+Nevertheless, the previous html is really similar to the index.html for the task app. So... how do we find a way to not need to copy and paste the html?
+
+## Template Inheritance
+The files will inherit from my layout all the structure of the page, and all that will need to be written will be what differs from one page to another.
+
+For that, we create a layout.html which will have the basic portion of the layout and a block:
+The block can have 
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tasks</title>
+    </head>
+    <body>
+        {% block body %}
+        {% endblock %}
+    </body>
+</html>
+```
+
+The "body" is the name of the block we want to use.
+
+In that way we do not have to add the whole html for every render html we do.
+
+From that, we can change the index and the add htmls. For instance, the add.html becomes:
+
+```
+{% extends "task/layout.html" %}
+
+{% block body %}
+<h1>Add Task:</h1>
+<form>
+    <input type="text" name="task">
+    <input type="submit">
+</form>
+{% endblock %}
+```
+
+## Add a link which goes from one page to another
+The first way to do that would be to:
+```
+<body>
+    <h1>Tasks:</h1>
+    <ul>
+        {% for task in tasks %}
+            <li>{{ task }}</li>
+        {% endfor %}
+    </ul>
+    <a href="/task/add">Add a New Task</a>
+</body>
+```
+Nevertheless, this would make it difficult for us to handle modifications. We would need to modify every link in every script to change if necessary. The name makes it way easier to handle it! The better solution is:
+
+```
+<body>
+    <h1>Tasks:</h1>
+    <ul>
+        {% for task in tasks %}
+            <li>{{ task }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'add' %}">Add a New Task</a>
+</body>
+```
+
+That works because Django uses the urls.py file to find the link.
+
+To avoid collision, we use the name of the app before in the html:
+```
+<a href="{% url 'task:add' %}">Add a New Task</a>
+```
+and new to add the app_name in the `urls.py`:
