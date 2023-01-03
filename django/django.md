@@ -545,4 +545,84 @@ What if everyone has a different task? What if I want a "per user" task.
 # Session
 It allows django to remember who you are and deal with specific variables related to you. Furthermore, it can store data about you!
 
+To do that, we use the feature of the request:
+```
+def index(request):
+    if "tasks" not in request.session:
+        request.session["tasks"] = []
+
+    return render(
+        request, "task/index.html",
+        {
+            "tasks": request.session["tasks"] 
+        }
+    )
+```
+When we do that, we will encounter a problem: "no such table: django_session". That is because django will store data in tables, by default.
+
+To create a table, it is necessary to run the following in the terminal:
+
+```
+python manage.py migrate
+```
+Will allow us to migrate default databases that it wants to create and this will allow it to happen.
+
+After that we need to make some changes in the views.py because the tasks are directly vinculated to the request:
+
+```
+def index(request):
+    if "tasks" not in request.session:
+        request.session["tasks"] = []
+
+    return render(
+        request, "task/index.html",
+        {
+            "tasks": request.session["tasks"] 
+        }
+    )
+
+def add(request):
+    return render(request, "task/add.html")
+
+def adddjango(request):
+    if request.method == "POST":
+        form = NewTaskForm(request.POST)
+        if form.is_valid():
+            task = form.cleaned_data["task"]
+            request.session["tasks"] += [task]
+            return HttpResponseRedirect(reverse("task:index"))
+        else:
+            return render(
+                request,
+                "task/adddjango.html",
+                {
+                    "form": form
+                }
+            )
+
+    return render(
+        request, "task/adddjango.html",
+        {
+            "form": NewTaskForm()
+        }
+    )
+```
+
+We make a change to the index.html as well in order to show no tasks if the list is empty:
+
+```
+<body>
+    <h1>Tasks:</h1>
+    <ul>
+        {% for task in tasks %}
+            <li>{{ task }}</li>
+        {% empty %}
+            <li>No tasks.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'task:adddjango' %}">Add a New Task</a>
+</body>
+```
+
+The sessions are determinated by cookies.
 
