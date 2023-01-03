@@ -391,3 +391,158 @@ To avoid collision, we use the name of the app before in the html:
 <a href="{% url 'task:add' %}">Add a New Task</a>
 ```
 and new to add the app_name in the `urls.py`:
+
+```
+from django.urls import path
+
+from . import views
+
+app_name = 'task'
+urlpatterns = [
+    path("", views.index, name="index"),
+    path("add", views.add, name="add"),
+]
+```
+
+## Add Action to Form
+Add an action will be done like this:
+```
+{% block body %}
+<h1>Add Task:</h1>
+<form accept="{% url 'task:add' %}" method="post">
+    <input type="text" name="task">
+    <input type="submit">
+</form>
+<a href="{% url 'task:index' %}">Return to Tasks</a>
+{% endblock %}
+```
+
+The method to go another page is called "get" in going from one page to another. Now we are using a post method. A post method is used when the method has a capacity to change the application. Post will give us a capacity to send data.
+
+The current submit status would be: Forbidden (403) with a CSRF verification failed. CSRF stands for Cross Site Forgery and it is useful specially for restrictive data.
+
+To remove this problem, we add a CSRF token, which is generated for every session and is available every time a user visits that site.
+
+If the token is valid, the form can send data. This CSRF is by default active in Django in MiddleWare in settings of the project:
+
+```
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+```
+
+The following is the one used: `'django.middleware.csrf.CsrfViewMiddleware'`.
+
+For that, we add the csrf_token:
+```
+{% extends "task/layout.html" %}
+
+{% block body %}
+<h1>Add Task:</h1>
+<form accept="{% url 'task:add' %}" method="post">
+    {% csrf_token %}
+    <input type="text" name="task">
+    <input type="submit">
+</form>
+<a href="{% url 'task:index' %}">Return to Tasks</a>
+{% endblock %}
+```
+
+## Django Forms
+Django gave us the hability to add forms in the django way.
+We start that with creating a class and add it in the request:
+```
+from django.shortcuts import render
+from django import forms
+
+tasks = ["foo", "bar", "baz"]
+
+class NewTaskForm(forms.Form):
+    task = forms.CharField(label="New Task")
+```
+
+```
+def adddjango(request):
+    return render(
+        request, "task/adddjango.html",
+        {
+            "form": NewTaskForm()
+        }
+    )
+```
+
+After it is done, we add the form in `{{}}` to the html and Django will automatically generate the html:
+```
+{% block body %}
+<h1>Add Task:</h1>
+<form accept="{% url 'task:add' %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit">
+</form>
+<a href="{% url 'task:index' %}">Return to Tasks</a>
+{% endblock %}
+```
+
+If I change the class, I do not need to change the html to make a change in the application:
+```
+class NewTaskForm(forms.Form):
+    task = forms.CharField(label="New Task")
+    priority = forms.IntegerField(label="Priority", min_value=1, max_value=10)
+```
+
+Django will automatically to a client validation if the values are wrongly written.
+
+Furthermore, we want to check the server validation, because it is easy to innactivate the client side validation and it.
+
+To create a server validation and add to the tasks:
+
+```
+def adddjango(request):
+    if request.method == "POST":
+        form = NewTaskForm(request.POST)
+        if form.is_valid():
+            task = form.cleaned_data["task"]
+            tasks.append(task)
+        else:
+            return render(
+                request,
+                "task/adddjango.html",
+                "form": form
+            )
+
+    return render(
+        request, "task/adddjango.html",
+        {
+            "form": NewTaskForm()
+        }
+    )
+```
+Now we can do a server validation that will show the mistake even if the client side validation is disabled.
+
+Now, to be redirectory to the tasks page:
+```
+def adddjango(request):
+    if request.method == "POST":
+        form = NewTaskForm(request.POST)
+        if form.is_valid():
+            task = form.cleaned_data["task"]
+            tasks.append(task)
+            return HttpResponseRedirect(reverse("task:index"))
+```
+For that, we need to import the HttpResponseRedirect and we use the reverse to specify the page with its name.
+
+Nevertheless, we still have a problem: the tasks list is a global variable. Therefore, anyone how access the application can view this same list of tasks.
+
+What if everyone has a different task? What if I want a "per user" task.
+
+# Session
+It allows django to remember who you are and deal with specific variables related to you. Furthermore, it can store data about you!
+
+
