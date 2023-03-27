@@ -555,3 +555,375 @@ Out[19]: <QuerySet [<Flight: 1. New York (JFK) to London (LHR)
 ```
 
 This give us the hability to manipulate the objects and their relation to SQL.
+
+It is now possible to interact with process and modules of the classes.
+
+Now we can start to really create a django application based on that.
+
+First, we change the "urls.py" to add this new address:
+
+```
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path("", views.index, name='index')
+]
+```
+
+After, we add a views:
+```
+from django.shortcuts import render
+
+try:
+    from sql.airline.flights.models import Flight
+except:
+    from flights.models import Flight
+
+# Create your views here.
+def index(request):
+    return render(
+        request, "flights/index.html",
+        {"flights": Flight.objects.all()}
+    )
+```
+
+Finally, we need to construct the index.html inside the templates files, which will have a basic html format in the "layout:
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Flights</title>
+    </head>
+    <body>
+        {% block body %}
+        {% endblock %}
+    </body>
+</html>
+```
+To which we will add a body:
+```
+{% extends "flights/layout.html" %}
+
+{% block body %}
+
+    <h1>Flights</h1>
+    <ul>
+        {% for flight in flights %}
+            <li>Flight {{ flight.id }}: {{ flight.origin }} to {{ flight.destination }}</li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}
+```
+
+Finally, we can run  http://127.0.0.1:8000/flights and get the results!
+
+Now, lets look at the airports of the database:
+```
+python manage.py shell
+```
+
+```
+from flights.model import *
+Airport.objects.all()
+```
+
+will  return:
+```
+<QuerySet [<Airport: New York (JFK)>, <Airport: London (LHR)>, <Airport: Paris (CDG)>, <Airport: Tokyo (NRT)>]>
+```
+
+We can also filter the query:
+```
+Airport.objects.filter(city="New York")
+```
+
+Than, to make sure we get only one object, we use `get` steady of filter:
+```
+Airport.objects.get(city="New York")
+```
+There, we can set that to an object and use it to create a flight:
+```
+jfk = Airport.objects.get(city="New York")
+cdg = Airport.objects.get(city="Paris")
+f = Flight(origin=jfk, destination=cdg, duration=435)
+f.save()
+
+f = Flight(origin=cdg, destination=jfk, duration=415)
+f.save()
+```
+
+But we do not need to do that for every time we want to manipulate and add database.
+
+Django has an admin app.
+
+In the urls.py, we have already seen the "urlpatterns" with this admin:
+
+```
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('flights/', include("flights.urls")),
+]
+```
+To use this, we need to create a admin account.
+
+To do that, we use:
+
+```
+python manage.py createsuperuser
+```
+From there, we need to add a user, email and password.
+
+```
+python manage.py createsuperuser
+Username (leave blank to use 'furbano'): fernando-urbano
+Email address: fernando.rocha.urbano@gmail.com
+Password:
+Password (again):
+Superuser created successfully.
+```
+
+Now, we have to work in the 'admin.py', in which we can register the classes we create to manipulate those from the admin app. The changes done in the admin app are:
+```
+from django.contrib import admin
+
+try:
+    from sql.airline.flights.models import Flight
+except:
+    from flights.models import Flight, Airport
+
+# Register your models here.
+admin.site.register(Airport)
+admin.site.register(Flight)
+```
+
+Now, if we run the server and go the "admin" part of the app:
+```
+python manage.py runserver
+```
+http://127.0.0.1:8000/admin/login/?next=/admin/
+
+There, we can change the sql tables and modify the underlying models.
+
+We have just added more airports and flights to the database.
+
+Now we want every flight to have its own page. To do that, we need to add the link of the flight to the "urlpatterns":
+
+```
+urlpatterns = [
+    path("", views.index, name='index'),
+    path("<int:flight_id>", views.flight, name="flight")
+]
+```
+
+After that, we must create a function in views.py to reference this urlpattern. The function must have the same name as the "name" in the urlpattern:
+
+```
+def flight(request, flight_id):
+    flight = Flight.objects.get(id=flight_id)
+    return render(request, "flights/flight.html", {
+        "flight": flight
+    })
+```
+We can also use "pk", which stends for "primary key", steady of id:
+
+```
+def flight(request, flight_id):
+    flight = Flight.objects.get(id=flight_id)
+    return render(request, "flights/flight.html", {
+        "flight": flight
+    })
+```
+
+After that, we must create the html that has those urls, which will have the named specified above (flight.html):
+
+```
+{% extends "flights/layout.html" %}
+
+{% block body %}
+
+    <h1>Flights {{ flight.id }}</h1>
+    <ul>
+        <li>Origin: {{ flight.origin }} </li>
+        <li>Destination: {{ flight.destination }} </li>
+        <li>Duration: {{ flight.duration }} </li>
+    </ul>
+
+{% endblock %}
+```
+
+Now we check specific flights!
+
+Now we are going to add Passengers to the flights!
+
+This is a many-to-many relationship.
+The many-to-many relationship allows for a passenger to be in multiple flights and for a flight to have multiple passengers.
+
+For that, is necessary to have this kind of class inside the models.py:
+
+```
+class Passenger(models.Model):
+    first = models.CharField(max_length=64)
+    last = models.CharField(max_length=64)
+    flights = models.ManyToManyField(Flight, blank=True, related_name="passengers")
+```
+
+In this way, we can add multiple flights to a passenger.
+The `blank=True` refers to the fact that a passenger can have no flights.
+The `related_name="passengers"` refers to the fact that we can access the passangers of a flight using this attribute to the flight.
+
+After we finished creating this change, we must apply the migrations:
+```
+python manage.py makemigrations
+python manage.py migrate
+```
+```
+python manage.py makemigrations
+Migrations for 'flights':
+  flights\migrations\0004_passenger.py
+    - Create model Passenger
+PS C:\Users\furbano\Desktop\personal\cs50w\sql\airline> python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, flights, sessions
+Running migrations:
+  Applying flights.0004_passenger... OK
+```
+
+The changes are made and we should add Passengers to the admin.py! We go the admin.py and add the Passenger:
+
+``from django.contrib import admin
+
+try:
+    from sql.airline.flights.models import Flight
+except:
+    from flights.models import Flight, Airport, Passenger
+
+# Register your models here.
+admin.site.register(Airport)
+admin.site.register(Flight)
+admin.site.register(Passenger)`
+```
+
+Now, to view the passengers in the flights url, we can add in "views.py":
+```
+def flight(request, flight_id):
+    flight = Flight.objects.get(id=flight_id)
+    return render(request, "flights/flight.html", {
+        "flight": flight,
+        "passengers": flight.passengers.all()
+    })
+```
+Than, we should modify the html to have:
+```
+{% extends "flights/layout.html" %}
+
+{% block body %}
+
+    <h1>Flight {{ flight.id }}</h1>
+    <ul>
+        <li>Origin: {{ flight.origin }} </li>
+        <li>Destination: {{ flight.destination }} </li>
+        <li>Duration: {{ flight.duration }} </li>
+    </ul>
+
+    <h2>Passengers</h2>
+    <ul>
+        {% for passenger in passengers %}
+            <li>{{ passenger }}</li>
+        {% empty %}
+            <li>No passengers.</li>
+        {% endfor %}
+    </ul>
+
+
+{% endblock %}
+```
+The `{% empty %}` is used if the list of passengers is empty.
+
+To not need to manually change pages, we can add a link to go back to the page we want. Therefore, we add the hyperlink in the end of the page:
+
+```
+{% extends "flights/layout.html" %}
+
+{% block body %}
+
+    <h1>Flight {{ flight.id }}</h1>
+    <ul>
+        <li>Origin: {{ flight.origin }} </li>
+        <li>Destination: {{ flight.destination }} </li>
+        <li>Duration: {{ flight.duration }} </li>
+    </ul>
+
+    <h2>Passengers</h2>
+    <ul>
+        {% for passenger in passengers %}
+            <li>{{ passenger }}</li>
+        {% empty %}
+            <li>No passengers.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'index' %}">Back to Flight List</a>
+
+{% endblock %}
+```
+
+Furthermore, in the Flight List, we add hypterlinks as well, specifying the flight id:
+
+```
+{% extends "flights/layout.html" %}
+
+{% block body %}
+
+    <h1>Flights</h1>
+    <ul>
+        {% for flight in flights %}
+            <li>
+                <a href="{% url 'flight' flight.id %}">
+                    Flight {{ flight.id }}: {{ flight.origin }} to {{ flight.destination }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}
+```
+
+Now we have linked the pages together!
+
+Now, we want to be able to add a passenger to a particular flight. We will do that by adding a new url to he "urlpatterns". For that, we add a "book" inside each flight:
+
+```
+urlpatterns = [
+    path("", views.index, name='index'),
+    path("<int:flight_id>", views.flight, name="flight"),
+    path("<int:flight_id>/book", views.book, name="book"),
+]
+```
+
+Now it is important to separate: we can request a webpage with a get message or a post message. A get message is used to "get the page", while the post message is used to manipulate data and do something in the system.
+
+Inside the page, for this particular example, we assume that the input field used is inside a post json with key "passenger".
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
