@@ -400,7 +400,7 @@ which will return:
 
 To represent the flight in a nicer way, we can have a string representation of the flight inside of the model created:
 
-````
+```
 from django.db import models
 
 # Create your models here.
@@ -801,6 +801,7 @@ except:
     from flights.models import Flight, Airport, Passenger
 
 # Register your models here.
+```
 admin.site.register(Airport)
 admin.site.register(Flight)
 admin.site.register(Passenger)`
@@ -906,6 +907,192 @@ urlpatterns = [
 Now it is important to separate: we can request a webpage with a get message or a post message. A get message is used to "get the page", while the post message is used to manipulate data and do something in the system.
 
 Inside the page, for this particular example, we assume that the input field used is inside a post json with key "passenger".
+
+After that, we use this key to get the row of the table Passenger that has this id and create the object.
+The object automatically has the the possibility to add a flight (a method).
+Finally, the "return" part of the function is used to update the page. The "reverse" makes it happen.
+
+```
+def book(request, flight_id):
+    if request.method == "POST":
+        flight = Flight.objects.get(pk=flight_id)
+        passenger = Passenger.objects.get(pk=int(request.POST["passenger"]))
+        passenger.flights.add(flight)
+        return HttpResponseRedirect(reverse("flight", args=(flight.id, )))
+```
+
+Now we have to add the form that will make this post request! We will do it inside the "flight.html":
+
+```
+    {% extends "flights/layout.html" %}
+
+    {% block body %}
+
+        <h1>Flight {{ flight.id }}</h1>
+        <ul>
+            <li>Origin: {{ flight.origin }} </li>
+            <li>Destination: {{ flight.destination }} </li>
+            <li>Duration: {{ flight.duration }} </li>
+        </ul>
+
+        <h2>Passengers</h2>
+        <ul>
+            {% for passenger in passengers %}
+                <li>{{ passenger }}</li>
+            {% empty %}
+                <li>No passengers.</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Add Passenger</h2>
+
+        <form action="{% url 'book' flight.id %}" method="post">
+            {%  csrf_token %}
+            <select name="passenger">
+                {% for passenger in non_passengers %}
+                    <option value="{{ passenger.id }}">{{ passenger }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit">
+        </form>
+
+        <a href="{% url 'index' %}">Back to Flight List</a>
+
+    {% endblock %}
+```
+
+Looking specifically at the "Add Passenger", we have:
+- an action, which specifies that the method is a post
+- a csrf_token, which specifies that is a security token specifying that the request comes from inside the application.
+- a list to select from: in this list the new passenger can be any passenger who is not already in this flight, which is a data available in the "non_passengers". The non_passenger variable had to be passed in "views" in the same way as every other. In the following code, the "Passenger.objects.exclude" excludes the rows of the table passenger which have the flight.id equal to the refered id.
+```
+def flight(request, flight_id):
+    flight = Flight.objects.get(id=flight_id)
+    return render(request, "flights/flight.html", {
+        "flight": flight,
+        "passengers": flight.passengers.all(),
+        "non_passengers": Passenger.objects.exclude(flights=flight.id).all()
+    })
+```
+- an input, which will submit the post request.
+
+## Building Extra Functionalities for Admin
+The admin page can be configure to make it nicer to see or to edit.
+For instance, we can change the list_display
+
+```
+# Register your models here.
+class FlightAdmin(admin.ModelAdmin):
+    list_display = ("id", "origin", "destination", "duration")
+    
+class PassengersAdmin(admin.ModelAdmin):
+    filter_horizontal = ("flights", )
+
+admin.site.register(Airport)
+admin.site.register(Flight, FlightAdmin)
+admin.site.register(Passenger, PassengersAdmin)
+```
+
+This changes the way the classes are presented.
+For instance the "list_display" shows how the admin will view the attributes of the class.
+
+# Users
+To build users, we need to craate another app called "users". First, inside the commmand prompt we add:
+```
+python manage.py startapp users
+```
+Second, we need to add this app in the settings.py:
+```
+INSTALLED_APPS = [
+    'flights',
+    'users',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+```
+Third, we need to add the users in "urlpatterns" inside the "urls.py" of the project folder:
+
+```
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('flights/', include("flights.urls")),
+    path('users/', include("users.urls")),
+]
+```
+Fourth, we need to create a urlpatterns for the app, which will be inside the app. We create the "urls.py" and add this script:
+
+```
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path("", views.index, name="index"),
+    path("login", views.login_view, name="login"),
+    path("logout", views.logout_view, name="logout"),
+]
+```
+In this case, we are already adding three different urls.
+Fifth, we work with the app's views. Inside, we first look at the index. Inside the index, we want to make sure that the user is authenticated. To assure that the user is authenticated, we check if the attribute user in the request has an attribute authenticated equals to True. It is worth to mention that the request always has the user attribute.
+
+```
+from django.shortcuts import render
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
+
+# Create your views here.
+def index(request):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+```
+So if the user is not authenticated, we require an authentication from the user. We use the same function as before, redirects the user to a login url (which has not yet been created).
+
+...now we create the login views:
+```
+# Create your views here.
+def index(request):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+    
+
+def login_request(request):
+    return render(request, "users/login.html")
+```
+
+...and now we create a template folders, which will have a folder with the name of the app inside in which we will have the html files. The first html file will be the layout:
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Users</title>
+    </head>
+    <body>
+        {% block body %}
+        {% endblock %}
+    </body>
+</html>
+```
+Later, we create the login.html which will extend the layout.html:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
