@@ -1079,6 +1079,114 @@ def login_request(request):
 ```
 Later, we create the login.html which will extend the layout.html:
 
+```
+{% extends "users/layout.html" %}
+
+{% block body %}
+
+    <form action="{% url 'login' %}" method="post">
+        {%  csrf_token %}
+        <input type="text" name="username" placeholder="Username">
+        <input type="password" name="password" placeholder="Password">  
+        <input type="login" value="Login">
+    </form>
+
+{% endblock %}
+```
+
+From there, we run the server again and start to add users. The users can have different level of access.
+
+After, we go to "users/login" where we can make the login with any of the users.
+
+Now we need to to implement what the login will do. To this kind of request, we must implement a POST method, because we cannot have the password inside the url.
+
+We can authenticate the user using `from django.contrib.auth import authenticate, login, logout`:
+```
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
+
+# Create your views here.
+def index(request):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+    
+
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return HttpResponseRedirect(reverse("index"))
+        else:
+            return render(request, "users/login.html", {
+                "message": "Invalid credentials."
+            })
+    return render(request, "users/login.html")
+```
+Furthermore, we add an optional "message". If it exists in the render html, it is displayed. For that, we add in the login.html:
+
+```
+{% extends "users/layout.html" %}
+
+{% block body %}
+
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+    <form action="{% url 'login' %}" method="post">
+        {%  csrf_token %}
+        <input type="text" name="username" placeholder="Username">
+        <input type="password" name="password" placeholder="Password">  
+        <input type="submit" value="Login">
+    </form>
+
+{% endblock %}
+```
+
+Now, if the user is authenticated, the login will return to "index", but the index has not yet been created. We must create it.
+
+First we change the index to render an html:
+
+```
+# Create your views here.
+def index(request):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+    return render(request, "users/user.html")
+```
+Than we create, inside the templates/users the "user.html":
+```
+{% extends "users/layout.html" %}
+
+{% block body %}
+
+    <h1>Welcome, {{ request.user.first_name }}</h1>
+    <h4>Username: {{ request.user.username }}</h4>
+
+{% endblock %}
+```
+
+Finally, we create the logout that just returns to the login page:
+```
+
+def logout_view(request):
+    logout(request)
+    return render(request, "users/login.html", {
+        "message": "Logged out."
+    })
+```
+
+Finally, we craete a hyperlink in the user.html that gives the request of this last function:
+
+```
+
+```
 
 
 
