@@ -1185,10 +1185,19 @@ def logout_view(request):
 Finally, we craete a hyperlink in the user.html that gives the request of this last function:
 
 ```
+{% extends "users/layout.html" %}
 
+{% block body %}
+
+    <h1>Welcome, {{ request.user.first_name }}</h1>
+    <h4>Username: {{ request.user.username }}</h4>
+
+    <a href="{% url 'logout' %}">Log Out</a>
+
+{% endblock %}
 ```
 
-
+This last one allows to login and logout of the web application.
 
 
 
