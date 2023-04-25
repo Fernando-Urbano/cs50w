@@ -596,9 +596,269 @@ We are using script to see the submission. The `console.log` is the equivalent o
 Now we have created a constant list item and assigned the value task to it.
 Later, we append this list element to the unordered list created.
 
+```
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tasks</title>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
 
+                document.querySelector('form').onsubmit = () => {
+                    const task = document.querySelector('#task').value;
 
+                    const li = document.createElement('li');
+                    li.innerHTML = task;
 
+                    document.querySelector('#tasks').append(li);
+
+                    document.querySelector('#task').value = '';
+
+                    // Stop form from submitting
+                    return false;
+                }
+            })
+        </script>
+    </head>
+    <body>
+        <h1>Tasks</h1>
+        <ul id="tasks">
+        </ul>
+        <form>
+            <input id="task" placeholder="New Task" type="text">
+            <input type="submit">
+        </form>
+    </body>
+</html>
+```
+
+In order to clean the task form, we assign '' to its value after.
+
+To increment our page, we disable the submit button by default. Neverthless, we also add a event listener with onkeyup that will execute a function to enable the submit button again.
+
+```
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tasks</title>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+
+                // By default, submit button is disabled
+                document.querySelector('#submit').disabled = true;
+
+                document.querySelector('#task').onkeyup = () =>{
+                    if (document.querySelector('#task').value.length > 0) {
+                        document.querySelector('#submit').disabled = false;
+                    } else {
+                        document.querySelector('#submit').disabled = true;
+                    }
+                }
+
+                document.querySelector('form').onsubmit = () => {
+                    const task = document.querySelector('#task').value;
+
+                    const li = document.createElement('li');
+                    li.innerHTML = task;
+
+                    document.querySelector('#tasks').append(li);
+
+                    document.querySelector('#task').value = '';
+                    document.querySelector('#submit').disabled = true;
+
+                    // Stop form from submitting
+                    return false;
+                }
+            })
+        </script>
+    </head>
+    <body>
+        <h1>Tasks</h1>
+        <ul id="tasks">
+        </ul>
+        <form>
+            <input id="task" placeholder="New Task" type="text">
+            <input id="submit" type="submit">
+        </form>
+    </body>
+</html>
+```
+
+# Intervals
+Allows us to run functions by timer trigger.
+
+To exemplify, we construct a counter again and use the built-in javascript function "setInterval" to run the function every 1000 miliseconds.
+
+```
+let counter = 0;
+ 
+function count() {
+    counter ++;
+    document.querySelector('h2').innerHTML = counter;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('button').onclick = count;
+
+    setInterval(count, 1000);
+    
+});
+```
+What if I want to store the values?
+
+# Local Storage
+Local storage allows us to store values and use them later.
+It is composed of two major functions:
+- localStorage.getItem(key): when we want to get something out of local storage based on its key.
+- localStorage.setItem(key, value): adds a new value to the localStorage (or replaces an existing one).
+
+To apply that, we check the existance of counter in localStorage:
+
+```
+if (!localStorage.getItem('counter')) {
+    localStorage.setItem('counter', 0);
+}
+ 
+function count() {
+    let counter = localStorage.getItem('counter')
+    counter ++;
+    document.querySelector('h2').innerHTML = counter;
+    localStorage.setItem('counter', counter)
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('button').onclick = count;
+
+});
+```
+
+Neverthless, doing that will restart with 0 everytime I restart the page. This is because the initial value is always set to zero.
+
+Therefore, we have to update it to make sure it is right:
+
+```
+if (!localStorage.getItem('counter')) {
+    localStorage.setItem('counter', 0);
+}
+ 
+function count() {
+    let counter = localStorage.getItem('counter')
+    counter ++;
+    document.querySelector('h2').innerHTML = counter;
+    localStorage.setItem('counter', counter)
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('h2').innerHTML = localStorage.getItem('counter');
+    document.querySelector('button').onclick = count;
+});
+```
+
+## Javascript Object
+Javascript object is an equivalent of a python dictionary.
+
+```
+let person = {
+    first: 'Harry', last: 'Potter'
+}
+```
+We can access the attributes using:
+- `person.first`
+- `person["first"]`
+
+This is particularly useful to APIs.
+
+# APIs
+APIs in the web are a way to send a request to a server and receive data back in a structural form.
+
+APIs use JSON: Javascript Object Notation.
+
+A JSON representing a flight would be:
+```
+{
+    "origin": "New York",
+    "destination": "London",
+    "duration": 415
+}
+```
+
+The values can be lists, objects, etc...
+
+For instance, we can use object like that:
+
+```
+{
+    "origin": {"city": "New York", "code": "JFK"},
+    "destination": {"city": "London", "code": "LHR"},
+    "duration": 415
+}
+```
+
+For instance, a currency rate:
+
+```
+{
+    "rates": {
+        "EUR": 0.907,
+        "JPY": 109.716,
+        "GBP": 0.706,
+        "AUD": 1.479,
+    },
+    "base": "USD"
+}
+```
+
+Those can be found in :
+https://api.exchangeratesapi.io/latest?base=USD
+
+To do that, we use "fetch". It will look in a website and try to find the information necessary.
+
+fetch will give back a "promise".
+
+When the fetch gets thte response, we want to convert it into a json.
+
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Currency Exchange</title>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                
+                fetch('https://api.exchangeratesapi.io/latest?base=USD')
+                .then(response => {
+                    return response.json()
+                })
+
+            })
+        </script>
+    </head>
+</html>
+```
+
+After, we use console log to see what is the data returned:
+
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Currency Exchange</title>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                
+                fetch('https://api.exchangeratesapi.io/latest?base=USD')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                })
+
+            })
+        </script>
+    </head>
+</html>
+```
+
+The data is a javascript object. 
 
 
 
