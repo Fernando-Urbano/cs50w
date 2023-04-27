@@ -858,7 +858,85 @@ After, we use console log to see what is the data returned:
 </html>
 ```
 
-The data is a javascript object. 
+The data is a javascript object. We use the console.log to see the data in the console.
+
+Now, if we want to have the result in the page:
+
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Currency Exchange</title>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                
+                fetch('https://api.exchangeratesapi.io/latest?base=USD')
+                .then(response => response.json())
+                .then(data => {
+                    const rate = data.rates.EUR;
+                    document.querySelector('body').innerHTML = `1 USD is equal to ${rate.toFixed(3)} EUR.;`
+                });
+
+            })
+        </script>
+    </head>
+</html>
+```
+The `toFixed` is used to round the number to "n" decimals.
+This is happen as a result of an assyncronous request: Javascript is asking for the results of this API, and when it gets it, it shows the result in the desied format.
+
+Now we can specify the currency we want to get. We do that by requesting data from the API only after the form is submitted. Furthermore, we use the value of the form to specify the name of the currency and use this as the key of the dictionary to request the data from the API.
+
+Furthermore, if the currency does not exist, we will get an `undefined` in javascript. That means that there is no value there. We work with that:
+
+Finally, we add a "catch" that will handle the case where we could not succesfully complete the request:
+
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Currency Exchange</title>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+
+                document.querySelector('form').onsubmit = function() {
+                    
+                    fetch('https://api.exchangeratesapi.io/latest?base=USD')
+                    .then(response => response.json())
+                    .then(data => {
+                        const currency = document.querySelector('#currency').value.toUpperCase();
+                        const rate = data.rates[currency];
+                        if (rate !== undefined) {
+                            document.querySelector('#result').innerHTML = `1 USD is equal to ${rate.toFixed(3)} ${currency}.`;
+                        } else {
+                            document.querySelector('#result').innerHTML = 'Invalid currency.';
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error)
+                        document.querySelector('#result').innerHTML = `Could not connect to API: ${error}.`;
+                    })
+
+                    return false;
+                }
+
+            })
+        </script>
+    </head>
+    <body>
+        <form>
+            <input id="currency" placeholder="Currency" type="text">
+            <input type="submit" value="Convert">
+        </form>
+    </body>
+    <div id="result">
+
+    </div>
+</html>
+``` 
+
+Javascript gives us the hability to manipulate the DOM and work in the user side!
+
 
 
 
