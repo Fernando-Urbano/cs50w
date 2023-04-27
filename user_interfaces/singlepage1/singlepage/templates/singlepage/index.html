@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Single Page</title>
+        <style>
+        </style>
+        <script>
+
+            function showSection(section) {
+                
+                fetch(`/sections/${section}`)
+                .then(response => response.text())
+                .then(text => {
+                    console.log(text);
+                    document.querySelector('#content').innerHTML = text;
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+
+                document.querySelector('#clean').style.display = 'none';
+
+                document.querySelectorAll('button').forEach(button => {
+                    button.onclick = function() {
+                        if (this.dataset.section == 'clean'){
+                            document.querySelector('#content').innerHTML = ""
+                            this.style.display = 'none';
+                        } else {
+                            showSection(this.dataset.section);
+                            document.querySelector('#clean').style.display = 'block';
+                        }
+                    };
+                });
+
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Hello!</h1>
+        <button data-section="clean" id="clean">Clean</button>
+        <button data-section="1">Section 1</button>
+        <button data-section="2">Section 2</button>
+        <button data-section="3">Section 3</button>
+        <div id="content">
+        </div>
+    </body>
+</html>
