@@ -628,5 +628,388 @@ Finally, we add an event listener to see when the animation is over. Therefore, 
 # React
 As applications get more complex, it becomes necessary to add organization to the javascript code.
 
+To do that, JS users have created frameworks to do that: the most popular of those is React.
 
+React is based on the idea of Declarative Programming: this is very different from Imperative Programming, which is more classically used. In imperative programming, we give commands to the machine.
+
+For instance, this would be imperative programming:
+
+```
+View:
+<h1>0</h1>
+
+Logic:
+let num = parseInt(document.querySelector("h1").innerHTML);
+num++;
+document.querySelector("h1").innerHTML = num;
+```
+
+This requires a fair amount of code to do something.
+
+In declarative programming, will allow us to describe what state should be displayed in the page in what form.
+
+In the declarative programming:
+
+```
+View:
+<h1>{num}</h1>
+
+Logic:
+num++;
+```
+
+Everytime the logic changes something, React will update the view.
+
+React will divide the application in many different components, where the component is a part of code that will keep track of a view and be related to an underlying state that will keep track of the application and change it when necessary.
+
+The simplest way to include React is to include three libraries to the application:
+- React: library to identify the components and how they behave.
+- ReactDOM: library that allows us to take React components and insert them into the DOM.
+- Babel: library used to translate code from one language to another.
+
+When writing in React, we will actually be writing in an extension of JavaScript called JSX.
+
+Browsers do not understand JSX, and Babel is used to translate JSX to language understandable by the browser.
+
+In "react.html" we can see more of it.
+
+```
+<script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+```
+
+The three sources above make reference to the three libraries mentioned before.
+
+After that, we will be writing JSX. In order for the browser to understand JSX, we use `<script type="text/babel">`. In real applications, we should make the translation before deploying.
+
+The power of JSX is that I can write html inside JSX:
+
+```
+function App() {
+    return (
+        <div>
+            Hello!
+        </div>
+    );
+}
+```
+
+Finally, we use ReactDOM to make the function render:
+
+```
+ReactDOM.render(<App />, document.querySelector("#app"));
+```
+
+In that, the first parameter is the function used and the second parameter is where it should be rendered (in this case, finds the element with the idd of "app").
+
+We can also include javascript inside the html.
+
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <title>Hello</title>
+    </head>
+    <body>
+        <div id="app"></div>
+
+        <script type="text/babel">
+            function App() {
+                const x = 1
+                const y = x + 2
+                return (
+                    <div>
+                        {x + y}
+                    </div>
+                );
+            }
+
+            ReactDOM.render(<App />, document.querySelector("#app"));
+        </script>
+    </body>
+</html>
+```
+
+React becomes even more powerful because I can reuse components.
+
+Steady of using:
+
+```
+function App() {
+    return (
+        <div>
+            <h1>Hello!</h1>
+            <h1>Hello!</h1>
+            <h1>Hello!</h1>
+        </div>
+    );
+}
+```
+
+We can create a component and use it inside another component:
+
+```
+function Hello() {
+    return (
+        <h1>Hello!</h1>
+    );
+}
+
+
+function App() {
+    const x = 1
+    const y = x + 2
+    return (
+        <div>
+            <Hello />
+            <Hello />
+            <Hello />
+        </div>
+    );
+}
+```
+
+Furthermore, we can use parameters inside those:
+
+```
+function Hello(props) {
+    return (
+        <h1>Hello, {props.name}!</h1>
+    );
+}
+
+
+function App() {
+    const x = 1
+    const y = x + 2
+    return (
+        <div>
+            <Hello name="Ron"/>
+            <Hello name="Ron"/>
+            <Hello name="Ron"/>
+        </div>
+    );
+}
+```
+
+Always, when using "parameters" inside a JSX function, we add a props in the parameter and add the name of the attribute we are adding together with props. In this case, the name is "name".
+
+Now, we will be recreating the app counter.html using React!
+
+```
+const [count, setCount] = React.useState(0);
+```
+
+The State is the object we define. The first argument of this React function is the first value of the object we are defining.
+
+Furthermore, we assign that to an array. The first element of the array is the variable. The second element is the `setCount`, which is used to later change the count if we want to.
+
+Due to that, we use `{count}` steady of 0 in the div:
+
+```
+return (
+    <div>
+        <h1>{count}</h1>
+    </div>
+);
+```
+
+Now, we have to create the function that will change the count.
+We cannot just use, inside the React, a function with `count = count + 1`.
+In React, it is necessary to use the function we defined befor: `setCount`:
+
+```
+function updateCount() {
+    setCount(count + 1);
+}
+```
+
+We can represent html, steady of rendering the html.
+
+Now, we will create a html to type mathematical questions: "addition.html".
+
+In React, it is good practice to use the `React.useState` for defining multiple variables:
+
+Steady of using:
+
+```
+const [num1, setNum1] = React.useState(1)
+const [num2, setNum2] = React.useState(2)
+```
+We use:
+```
+const [state, setState] = React.useState({
+    num1: 1,
+    num2: 2
+})
+```
+
+Now, lets say we want to add those two numbers:
+
+```
+const [state, setState] = React.useState({
+    num1: 1,
+    num2: 2
+})
+
+return (
+    <div>
+        <div>{state.num1} + {state.num2}</div>
+    </div> 
+)
+```
+
+Now, we need to know if the user typed correctly the answer.
+
+```
+const [state, setState] = React.useState({
+    num1: 1,
+    num2: 2,
+    response: ""
+})
+```
+
+```
+return (
+    <div>
+        <div>{state.num1} + {state.num2}</div>
+        <input value={state.response}>
+    </div> 
+)
+```
+
+Neverthless, if we try to change it, nothing will happen. That is because the input must always be equal to state.response, which is "".
+
+Therefore, we must add more code and create the following function, updateResponse:
+
+```
+return (
+    <div>
+        <div>{state.num1} + {state.num2}</div>
+        <input onChange={updateResponse} value={state.response}>
+    </div> 
+)
+```
+
+We than add this function, where the `event`
+```
+function updateResponse(event) {
+    setState({
+        response: event.target.value
+    })
+}
+```
+
+Neverthless, the `setState` also has other variables to be set. Therefore, in the common way, we wound need to rewrite every single variable:
+
+```
+function updateResponse(event) {
+    setState({
+        num1: state.num1,
+        num2: state.num2,
+        response: event.target.value
+    })
+}
+```
+
+Neverthless, there are easier ways to achieve this result with the "spreader".
+
+```
+function updateResponse(event) {
+    setState({
+        ...state,
+        response: event.target.value
+    })
+}
+```
+
+In this case, everything should stay the same, but the `response`.
+
+Now, we need to add the key press for the enter key. So we create a function and add to input that handles the events of key press. Furthermore, inside this function, we check if the answer is correct.
+
+```
+return (
+    <div>
+        <div>{state.num1} + {state.num2}</div>
+        <input onKeyPress={inputKeyPress} onChange={updateResponse} value={state.response}>
+    </div> 
+)
+```
+
+After, we create the function:
+
+```
+function inputKeyPress(event) {
+    if (event.key === "Enter") {
+        const answer = parseInt(state.response);
+        if (state.num1 + state.num2 === answer) {
+            // User got the question right
+        } else {
+            // User got the question wrong
+        }
+    }
+}
+```
+
+Than, we add more features until it is ready...
+
+Furthermore, we can change the class of of a div, h1, etc, based on React as well. For that, we create the classes:
+
+```
+.incorrect {
+    color: red;
+    margin: 5px;
+}
+
+.incorrect:hover {
+    text-decoration: underline;
+}
+```
+
+In this, case, we add the variable in state "incorrect: false". It will start as false.
+
+Furthermore, we define that the div changes class based on the value of incorrect:
+
+``` 
+<div className={state.incorrect ? "incorrect" : ""} id="problem">
+    {state.num1} + {state.num2}
+</div>
+```
+
+The state says: if state.incorrect is true, have a class of incorrect, otherwise, have a class of "" (which is not a defined class).
+
+Finally, if we arrive to a score of 10, we win. We do that by changing the entire function which will be rendered:
+
+```
+function updateResponse(event) {
+    setState({
+        ...state,
+        response: event.target.value
+    });
+}
+
+function renderProblem() {
+    return (
+        <div>
+            <div className={state.incorrect ? "incorrect" : ""} id="problem">
+                {state.num1} + {state.num2}
+            </div>
+            <input onKeyPress={inputKeyPress} onChange={updateResponse} autoFocus={true} value={state.response} />
+            <div>Score: {state.score}</div>
+        </div>
+    )
+}
+
+if (state.score === 10) {
+    return renderWinScreen();
+} else {
+    return renderProblem();
+}
+```
+
+If the state score is equal to 10, we render the Win, else, we render the Problem.
 
