@@ -1012,4 +1012,3 @@ if (state.score === 10) {
 ```
 
 If the state score is equal to 10, we render the Win, else, we render the Problem.
-

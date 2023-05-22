@@ -95,8 +95,8 @@
                                 ...state,
                                 score: state.score + 1,
                                 response: "",
-                                num1: Math.ceil(Math.random() * 10),
-                                num2: Math.ceil(Math.random() * 10),
+                                num1: Math.ceil(Math.random() * 10 * Math.random() * 10),
+                                num2: Math.ceil(Math.random() * 10 * Math.random() * 10),
                                 incorrect: false
                             });
                         } else {
