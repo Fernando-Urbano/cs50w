@@ -306,5 +306,157 @@ CD: Continuous Delivery
 
 Continuous delivery leads to incremental changes steady of making big changes. This is particularly helpful to understand what went wrong in the new delivery, vis-a-vis a project that delivery multiple new features and corrections at the same time. Furthermore, it helps the user to addapt to one change at a time. 
 
-In the ideal project, continuous deployment leads to continuous
+In the ideal project, continuous deployment leads to continuous integration.
+
+# GitHub Actions
+Github actions allows us to automatize some elements of deployment. For instance, with github actions we can check it the deployment was correctly done.
+
+To achieve that, we create a github page inside of our application and create a command to be followed in an yaml:
+
+```
+name: Testing
+on: push
+
+jobs:
+  test_project:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run Django unit tests
+      run: |
+        pip3 install --user django
+        python3 manage.py test
+```
+
+- name: name of the command
+- on: when will it be activated?
+- jobs: the jobs it will do
+- runs-on: in which machine it will run. in this case the latest 
+- name: name of the specific part of the job
+- run: what this specific part of the job will do. In this case, it install django (other dependencies might be necessary to install for more complex systems) and runs the tests.
+
+Therefore, everytime we push, automatically, the tests will run in a github virtual machine.
+
+From github repository we can look at a tab which shows the recent pushs and if they were successful.
+
+# Docker
+Docker is a way to make containerization software. Steady of running in the computer, we will run it inside of a container in the computer.
+
+Each container will contain its own configurations.
+
+As long as you provide the right instructions, everyone in a team will work on identical environment.
+
+This works well with the idea of continuous delivery.
+
+In this way, we assure that the right versions and the right packages are installed.
+
+A VM (Virtual Machine) is running a virtual machine, having its own Guest OS. VMs are generally heavy. On the other hand, Containers do not have their own Guest OS. They rely on Docker, which provides environments with specifics bins/libs. The Docker layer is keeping track of the containers and the environments.
+
+How do we configure those Docker containers?
+
+We do that by writing a docker file.
+
+The docker file we have created is in "airline1". 
+
+```
+FROM python:3
+COPY .  /usr/src/app
+WORKDIR /usr/src/app
+RUN pip install -r requirements.txt
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+```
+
+The Dockerfile describes the instructions for creating a docker image.
+
+The docker image represents all the libraries and versions which allows us to created containers based on the same material.
+
+This docker file allows me to create an image.
+
+The `FROM python:3` means that we are taking configurations from the python:3 image. We will be basing our image in another one. Specifically, this image is responsible for installing python:3 and other packages which might be helpful.
+
+Often times, we will base a docker file in another docker file.
+
+The `COPY . /usr/src/app` will copy everything I have in the current directory and paste it in usr/src/app. This will include everything into the container: settings, requirements, etc...
+
+The `WORKDIR /usr/src/app` will change my working directory to the usr/src/app. Therefore, this new working directory will have everything that is necessary.
+
+Finally, the `CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]` specifies what should run when I start my container.
+The sintax shows that each word is separated by a comma. `0.0.0.0:8000` is the portal in which I want to run the container. We could have chosen another portal as well.
+
+Therefore, any user can base their code on the same configurations.
+
+Until now, we have been using SQL Lite database, being a file -based database that allows us to create tables, insert rows into it, etc...
+
+Neverthless, SQL Lite does not scale as well for larger applications and we want the SQL to be hosted in a separated server. Postgress or MySQL work better in this case.
+
+How can I change it?
+
+We should create another server. We do that in production by running the SQL in another container.
+
+Docker Compose is the way to do that: Docker Compose allows us to run multiple containers together. We can run a Postgress database in one container and the application in another container and have they communicating.
+
+Having Postgress installed, we create a file in "airline1" called docker-compose.yml.
+
+The docker-compose.yml is a yml file that describes the services that will be part of my application. Ecah service is going to be its own container that could be based on a different docker image.
+
+```
+version: '3'
+
+services:
+    db:
+        image: postgres
+
+    web:
+        build
+        volumes:
+            - .:/usr/src/app
+        ports:
+            - "8000:8000"
+```
+
+In this case, we have the `db` service that is based on the image `postgres`, which is an already built image of how to start postgres container.
+
+Furthermore, for the web application, we base it on the docker file I have written. This can be specified by `build: .`, meaning I am building from the current directory. In addition, I specify that my current directory should correspond to the app directory, in the `volumes: - .:/usr/src/app`. Finally, we specify that the port 8000 on my computer should correspond to port 8000 on docker, from `ports: - "8000:8000"`.
+
+So, with that, we can create our containers!
+
+From there, we go the airline1 directory, and in commmand prompt:
+
+```
+docker-compose up
+```
+
+This will start the services.
+
+This will start the application in port 8000. Therefore, going to "0.0.0.0:8000/flights" will take me to flights page.
+
+This is not running only on my computer, but in the docker container.
+
+Now, lets say we have logins in the app and we want to create a super user.
+
+We cannot do as before, by using the the `python manage.py createsuperuser`. This would create a superuser in the local computer steady of in the docker.
+
+To do that, we start by writing: `docker ps` in the command prompt.
+
+This will show all the containers that are current running. From there, we can make a configuration to run the previous sheel command inside of a container.
+
+To do that, we look at the containers that are currently running. One of those will be the web container. With this specific container id, we use in command prompt:
+
+`docker exec -it d5b80cf9991d bash -l`
+
+The previous command specifies that we want to execute a command inside the container with the passed id. `-it` specifies that we want to make the execution interactive, and the `bash` is the command we want to execute. Therefore, we are saying that we want to 
+run a bash prompt, meaning I want to be able to interact with a sheel (to be able to run command inside the container).
+
+From there, after running this, we go inside a sheel in the directory that contains the web application.
+
+From there, we can do a secretuser in the same way we would do before. After, by pressing ctrl + B, we logout of the container.
+
+The superuser will be created.
+
+
+ 
+
+
+
+
 
