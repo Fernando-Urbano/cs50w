@@ -229,4 +229,31 @@ One common solution for that is to use from the Environment variables. The serve
 Many APIs have API keys.
 
 ## Security: JavaScript
-JavaScript is particularly vunerable due to 
+JavaScript is particularly vunerable due to to the fact that is programming in the client side.
+
+One particular vulnerability is "Cross-Site Scripting", meaning that one can run JavaScript in the webpage besides the JavaScript from that webpage. A webpage always wants that the JavaScript running is only the one written by the application.
+
+If someone else can write, they can manipulate the users experience.
+
+Therefore, leaves the possibility of changing the DOM.
+
+You will want to detect that there is someone writing and make a way to avoid it.
+
+This comes together with the idea that we do not want the user to be able to write SQL code to access our queries.
+
+ Django is particularly good at detecting those by making "Cross-Site Request Forgery", meaning it fakes a request to the website while not intending to make this request.
+
+ To avoid this, we only want a POST request to be send to access the database.
+
+ The {% csrf_token %} is a way to avoid that. 
+
+ ```
+<form action="/transfer" method="post">
+    {% csrf_token %}
+    <input name="to" value="brian">
+    <input name="amt" value="2800">
+    <input name="submit" value="Transfer">
+</form>
+ ```
+
+
