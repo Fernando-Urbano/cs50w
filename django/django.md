@@ -113,7 +113,7 @@ urlpatterns = [
 ]
 ```
 
-It is composed of the path of the url and and the function that is called. Finally, we use a name as well to reference it later.
+It is composed of the path of the url and the function that is called. Finally, we use a name as well to reference it later.
 
 Finally, we do the same in the project `urls.py` which already has a admin.site.urls:
 
@@ -238,7 +238,7 @@ Now we have a non static file!
 Now we want to build static files. For instance, a CSS file is an static file.
 
 We create the static files inside the static folder which is inside the app. We do that for the same reason we add a folder with the app name in the templates folder.
-s
+
 After we create a `styles.css` as a static file, we add it in the html with the following format (steady of a url):
 ```
 {% load static %}
